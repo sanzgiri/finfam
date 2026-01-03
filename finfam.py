@@ -97,16 +97,21 @@ def parse_finfam_30y(data: dict[str, Any]) -> dict[str, Any]:
     # Compute "best APR" across institutions, skipping outliers
     best_apr = None
     best_inst = None
+    min_apr_inst = None
+    min_apr_value = None
 
     for inst in data.get("institutions", []) or []:
         name = inst.get("name")
         for rate in inst.get("rates", []) or []:
             if rate.get("normalized_product_type") != "30-year-fixed":
                 continue
-            if (rate.get("outlier_reason") or "").strip():
-                continue
             apr = rate.get("apr")
             if apr is None:
+                continue
+            if min_apr_value is None or apr < min_apr_value:
+                min_apr_value = apr
+                min_apr_inst = name
+            if (rate.get("outlier_reason") or "").strip():
                 continue
             if best_apr is None or apr < best_apr:
                 best_apr = apr
@@ -121,6 +126,7 @@ def parse_finfam_30y(data: dict[str, Any]) -> dict[str, Any]:
         "finfam_30y_count": finfam_count,
         "finfam_30y_best_apr_ex_outliers": best_apr,
         "finfam_30y_best_apr_institution": best_inst,
+        "finfam_30y_min_apr_institution": min_apr_inst,
     }
 
 

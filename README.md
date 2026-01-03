@@ -38,6 +38,26 @@ Or with uv:
 uv run python3 finfam.py
 ```
 
+## Plotting
+
+Generate interactive plots from `data/mortgage_daily.csv`:
+```bash
+python3 plot_rates.py --output data/daily_rates.html
+python3 plot_rates.py --days 7 --output data/last_7_days.html
+python3 plot_rates.py --days 30 --output data/last_30_days.html
+```
+
+Open the HTML files in a browser to view interactive charts with hover details.
+
+## GitHub Actions & Pages
+
+The daily workflow updates the CSV and publishes plots to GitHub Pages:
+- All-time: `all_time.html`
+- Last 30 days: `last_30_days.html`
+- Last 7 days: `last_7_days.html`
+
+Enable GitHub Pages with **Settings → Pages → Source → GitHub Actions**.
+
 ## Output
 
 The script writes data to `data/mortgage_daily.csv` with the following fields:
