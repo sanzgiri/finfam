@@ -49,6 +49,20 @@ python3 plot_rates.py --days 30 --output data/last_30_days.html
 
 Open the HTML files in a browser to view interactive charts with hover details.
 
+## Backfill (Historical Data)
+
+To seed history (FinFam + FRED + Yahoo only), run:
+```bash
+python3 backfill_history.py --days 30
+```
+
+Optional range:
+```bash
+python3 backfill_history.py --start-date 2025-12-01 --end-date 2025-12-31
+```
+
+The daily run de-duplicates by `run_date_utc` and replaces same-day rows.
+
 ## GitHub Actions & Pages
 
 The daily workflow updates the CSV and publishes plots to GitHub Pages:

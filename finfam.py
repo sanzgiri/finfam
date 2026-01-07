@@ -239,37 +239,44 @@ def write_row_csv(path: Path, row: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     file_exists = path.exists()
 
-    # Stable column order: keep existing headers if file exists
-    if file_exists:
-        with path.open("r", newline="", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            existing_headers = next(reader, [])
-        headers = existing_headers
-        # Add any new keys to the end
-        for k in row.keys():
-            if k not in headers:
-                headers.append(k)
-    else:
-        headers = list(row.keys())
-
-    # Write
     if not file_exists:
+        headers = list(row.keys())
         with path.open("w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=headers)
             w.writeheader()
             w.writerow(row)
-    else:
-        # If headers expanded, rewrite file with new header + prior rows
-        with path.open("r", newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            prior = list(reader)
+        return
 
-        with path.open("w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=headers)
-            w.writeheader()
-            for r in prior:
-                w.writerow(r)
-            w.writerow(row)
+    with path.open("r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        headers = reader.fieldnames or []
+        prior = list(reader)
+
+    # Add any new keys to the end
+    for k in row.keys():
+        if k not in headers:
+            headers.append(k)
+
+    run_date = row.get("run_date_utc")
+    replaced = False
+    updated: list[dict[str, Any]] = []
+    for r in prior:
+        if run_date and r.get("run_date_utc") == run_date:
+            merged = dict(r)
+            merged.update(row)
+            updated.append(merged)
+            replaced = True
+        else:
+            updated.append(r)
+
+    if not replaced:
+        updated.append(row)
+
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=headers)
+        w.writeheader()
+        for r in updated:
+            w.writerow(r)
 
 
 def main() -> int:
