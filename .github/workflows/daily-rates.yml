@@ -37,6 +37,7 @@ jobs:
           python plot_rates.py --days 30 --output site/last_30_days.html
       - name: Create pages index
         run: |
+          mkdir -p site
           cat > site/index.html <<'HTML'
           <!doctype html>
           <html lang="en">
