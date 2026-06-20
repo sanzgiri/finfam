@@ -300,20 +300,29 @@ def write_row_csv(path: Path, row: dict[str, Any]) -> None:
             w.writerow(r)
 
 
+def _safe_fetch(label: str, fn, *args) -> dict[str, Any]:
+    """Call a fetch function, returning empty dict on failure so other sources still land."""
+    try:
+        return fn(*args)
+    except Exception as e:
+        print(f"WARNING: {label} fetch failed, skipping: {e}", file=sys.stderr)
+        return {}
+
+
 def main() -> int:
     run_date_utc = dt.datetime.now(dt.timezone.utc).date().isoformat()
 
     finfam_url, finfam_data = try_finfam_latest()
     finfam_30y = parse_finfam_30y(finfam_data)
 
-    zillow = fetch_zillow_or_30y()
-    bankrate = fetch_bankrate_or_30y()
+    zillow = _safe_fetch("Zillow", fetch_zillow_or_30y)
+    bankrate = _safe_fetch("Bankrate", fetch_bankrate_or_30y)
 
-    dgs10 = fetch_fred_latest("DGS10")           # daily 10Y constant maturity
-    mort30 = fetch_fred_latest("MORTGAGE30US")   # weekly Freddie Mac PMMS
+    dgs10 = _safe_fetch("FRED DGS10", fetch_fred_latest, "DGS10")
+    mort30 = _safe_fetch("FRED MORTGAGE30US", fetch_fred_latest, "MORTGAGE30US")
 
     # Yahoo quote for 10Y Treasury - CBOE 10Y yield index
-    tnx = fetch_yahoo_latest("^TNX")
+    tnx = _safe_fetch("Yahoo ^TNX", fetch_yahoo_latest, "^TNX")
 
     row: dict[str, Any] = {
         "run_date_utc": run_date_utc,
