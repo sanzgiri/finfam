@@ -23,6 +23,27 @@ from pathlib import Path
 from typing import Any, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+
+# -----------------------------
+# Retry-capable session
+# -----------------------------
+def _make_retry_session() -> requests.Session:
+    session = requests.Session()
+    retry = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+
+_SESSION = _make_retry_session()
 
 
 # -----------------------------
@@ -53,8 +74,8 @@ DEFAULT_HEADERS = {
 # -----------------------------
 # Helpers
 # -----------------------------
-def http_get(url: str, timeout: int = 30) -> requests.Response:
-    r = requests.get(url, headers=DEFAULT_HEADERS, timeout=timeout)
+def http_get(url: str, timeout: int = 60) -> requests.Response:
+    r = _SESSION.get(url, headers=DEFAULT_HEADERS, timeout=timeout)
     r.raise_for_status()
     return r
 
