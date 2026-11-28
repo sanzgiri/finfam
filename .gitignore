@@ -10,6 +10,9 @@ __pycache__/
 data/*
 !data/mortgage_daily.csv
 
+# Generated site artifacts (uploaded to GitHub Pages, not committed)
+site/
+
 # IDE
 .vscode/
 .idea/
